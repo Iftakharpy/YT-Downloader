@@ -1,10 +1,10 @@
-# To compile/convert gui.ui file to python file use command
+### To compile/convert gui.ui file to python file use command
 > pyuic5 -x gui.ui -o gui.py
 
-# To compile/convert resources.qrc file to python use command
+### To compile/convert resources.qrc file to python use command
 > pyrcc5 resources.qrc -o resources_rc.py
 
-## Syntax for resource files(resources.qrc)
+### Syntax for resource files(resources.qrc)
 ```qrc
 <!DOCTYPE RCC>
 <RCC version="1.0">
@@ -17,7 +17,7 @@
 ```
 
 
-# To import the class from "gui.py" file in some other python file use the following boiler plate
+### To import the class from "gui.py" file in some other python file use the following boiler plate
 ```python
 from PyQt5.QtWidgets import QMainWindow
 #importing gui class from pyuic5 auto genereated python code

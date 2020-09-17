@@ -1,29 +1,29 @@
 # YT Downloader downloads video and playlist from YouTube
 >YT Downloader uses the video url/id to download videos
 >To download playlists it requires an api key of Youtube Data API v3
->It uses the api key to get video ids from playlist to get an api key visit [link](https://rapidapi.com/blog/how-to-get-youtube-api-key/).
+>It uses the api key to get video ids from playlist to get an api key visit [the link](https://rapidapi.com/blog/how-to-get-youtube-api-key/).
 
 <br>
 <br>
 
-## To compile/convert gui.ui file to python file use command
-> pyuic5 -x gui.ui -o gui.py
+## To compile/convert final_gui.ui file to GUI.py python file use command
+> pyuic5 -x final_gui.ui -o GUI.py
 
 <br>
 
-## To compile/convert resources.qrc file to python use command
-> pyrcc5 resources.qrc -o resources_rc.py
+## To compile/convert resource.qrc file to python use command
+> pyrcc5 resource.qrc -o resource_rc.py
 
 <br>
 
-## Syntax for resource files(resources.qrc)
+## Syntax for resource files(resource.qrc)
 ```qrc
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
         <file>icons/download.svg</file>
         <file>icons/youtube.svg</file>
-        <file>relative file path from resources.qrc</file>
+        <file>relative file path from resource.qrc</file>
     </qresource>
 </RCC>
 ```

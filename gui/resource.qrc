@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="images">
+    <file>images/download.svg</file>
+    <file>images/youtube.svg</file>
+  </qresource>
+</RCC>

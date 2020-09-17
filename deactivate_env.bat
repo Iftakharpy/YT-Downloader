@@ -1,0 +1,1 @@
+cd "D:\YoutubeDownloader\CleanYT\env\Scripts" && deactivate.bat && cd "D:\YoutubeDownloader\CleanYT" && cls

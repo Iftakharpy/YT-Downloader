@@ -32,11 +32,11 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
+   <layout class="QGridLayout" name="gridLayout_3">
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="videos">
        <attribute name="title">
@@ -310,6 +310,19 @@
         <string>Playlist</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="0">
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item row="1" column="0">
          <widget class="QFrame" name="frame_3">
           <property name="frameShape">
@@ -318,8 +331,41 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="1" column="0">
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0" colspan="4">
+            <layout class="QVBoxLayout" name="video_label_and_line_edit_2">
+             <item>
+              <widget class="QLabel" name="playlist_id_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Playlist URL/ID</string>
+               </property>
+               <property name="buddy">
+                <cstring>video_id</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="playlist_id">
+               <property name="minimumSize">
+                <size>
+                 <width>500</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="placeholderText">
+                <string>https://www.youtube.com/playlist?list=PLYf4Vz9V1ESrVD_NMDlwRjgo8jn2UNEND</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="0" colspan="4">
             <layout class="QHBoxLayout" name="horizontalLayout_3">
              <item>
               <widget class="QLabel" name="playlist_qualities_label">
@@ -338,22 +384,22 @@
               <widget class="QComboBox" name="playlist_qualities">
                <item>
                 <property name="text">
-                 <string>1. Highest quality progressive video</string>
+                 <string>1. Highest quality progressive video (if available else skip)</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>2. Highest quality audio</string>
+                 <string>2. Highest quality audio (if available else skip)</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>3. Highest quality audio and video seperately</string>
+                 <string>3. Highest quality video (if available else skip)</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>4. 3+merge (ffmpeg required) [merging might take a long time]-NOT RECOMENDED</string>
+                 <string>4. Highest quality audio and video seperately</string>
                 </property>
                </item>
               </widget>
@@ -388,53 +434,7 @@
              </item>
             </layout>
            </item>
-           <item row="2" column="0">
-            <layout class="QVBoxLayout" name="download_info_2">
-             <item>
-              <widget class="QLabel" name="currently_downloading_playlist_video">
-               <property name="styleSheet">
-                <string notr="true">margin-top:20;</string>
-               </property>
-               <property name="text">
-                <string>Downloading __________</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="progress_info_2">
-               <item>
-                <widget class="QProgressBar" name="playlist_video_progress">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="autoFillBackground">
-                  <bool>false</bool>
-                 </property>
-                 <property name="value">
-                  <number>52</number>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="textVisible">
-                  <bool>true</bool>
-                 </property>
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="invertedAppearance">
-                  <bool>false</bool>
-                 </property>
-                 <property name="textDirection">
-                  <enum>QProgressBar::BottomToTop</enum>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </item>
-           <item row="3" column="0">
+           <item row="3" column="0" colspan="4">
             <widget class="QFrame" name="cancel_aligned_2">
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
@@ -486,40 +486,40 @@
              </layout>
             </widget>
            </item>
-           <item row="0" column="0">
-            <layout class="QVBoxLayout" name="video_label_and_line_edit_2">
-             <item>
-              <widget class="QLabel" name="playlist_id_label">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>Playlist URL/ID</string>
-               </property>
-               <property name="buddy">
-                <cstring>video_id</cstring>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="playlist_id">
-               <property name="minimumSize">
-                <size>
-                 <width>500</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="placeholderText">
-                <string>https://www.youtube.com/playlist?list=PLYf4Vz9V1ESrVD_NMDlwRjgo8jn2UNEND</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
            <item row="4" column="0">
+            <spacer name="horizontalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>389</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="playlist_video_number">
+             <property name="text">
+              <string>flsjflsaf</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <spacer name="horizontalSpacer_8">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>388</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="5" column="0" colspan="4">
             <layout class="QHBoxLayout" name="horizontalLayout_6">
              <item>
               <spacer name="horizontalSpacer_5">
@@ -562,21 +562,54 @@
              </item>
             </layout>
            </item>
+           <item row="2" column="0" colspan="3">
+            <layout class="QVBoxLayout" name="download_info_2">
+             <item>
+              <widget class="QLabel" name="currently_downloading_playlist_video">
+               <property name="styleSheet">
+                <string notr="true">margin-top:20;</string>
+               </property>
+               <property name="text">
+                <string>Downloading __________</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="progress_info_2">
+               <item>
+                <widget class="QProgressBar" name="playlist_video_progress">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="autoFillBackground">
+                  <bool>false</bool>
+                 </property>
+                 <property name="value">
+                  <number>52</number>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="textVisible">
+                  <bool>true</bool>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="invertedAppearance">
+                  <bool>false</bool>
+                 </property>
+                 <property name="textDirection">
+                  <enum>QProgressBar::BottomToTop</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
           </layout>
          </widget>
-        </item>
-        <item row="0" column="0">
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
         </item>
         <item row="2" column="0">
          <spacer name="verticalSpacer_4">
@@ -586,7 +619,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>40</height>
+            <height>20</height>
            </size>
           </property>
          </spacer>

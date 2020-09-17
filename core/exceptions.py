@@ -10,6 +10,15 @@ class Invalid_API_Key(Exception):
     def __str__(self):
         return {self.message}
 
+class API_Error(Exception):
+    title = "YouTube DATA API Error"
+    message = "this should be updated"
+    def __init__(self, message):
+        self.message = message
+    
+    def __str__(self):
+        return self.message
+
 
 class Invalid_Video_Id(Exception):
     title = "Invalid Video URL/ID"

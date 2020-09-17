@@ -69,6 +69,7 @@ class Database:
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         video_id TEXT,
         error_description TEXT,
+        dt time default current_timestamp,
 
         FOREIGN KEY(video_id) REFERENCES {TABLES["Videos"]}(video_id)
     );

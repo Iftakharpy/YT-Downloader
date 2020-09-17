@@ -56,13 +56,16 @@ class Download_Thread(QThread):
         progress = round((float(abs(bytes_remaining-self.file_size)/self.file_size))*float(100),2)
         return progress
 
-    def run(self):
+    def run(self, *args, **kwargs):
+        """
+        Pass args and kwargs to stream.downloade function
+        """
         self.DOWNLOADER_THREAD = QThread()
         self.downloader = Logger_Decorator_For_Download_Func(self.stream.download, self.video_id, parent=None)
         self.downloader.moveToThread(self.DOWNLOADER_THREAD)
         self.downloader.completed.connect(self.DOWNLOADER_THREAD.exit)
         try:
-            self.downloader.run()
+            self.downloader.run(*args, **kwargs)
         except Exception as e:
             self.error_occured.emit(e)
     

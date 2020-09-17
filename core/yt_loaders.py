@@ -9,12 +9,16 @@ import urllib
 
 class YT_object_Loader(QObject):
     completed = pyqtSignal(YouTube) #emits an pytube.YouTube object when finished
+    error_occured = pyqtSignal(Exception)
     def __init__(self, video_url):
         super().__init__()
         self.video_url = video_url
     
     def run(self):
-        self.completed.emit(YouTube(self.video_url))
+        try:
+            self.completed.emit(YouTube(self.video_url))
+        except Exception as e:
+            self.error_occured.emit(e)
 
 
 

@@ -126,4 +126,5 @@ class Logger_Decorator_For_Download_Func(QObject):
             #this error occurs when Exception "e" doesn't have errno or winerror attribute
             except Exception as e:
                     DB.insert_error(self.video_id, error_description=str(e)+"\nDon't know what happend new error.")
-                    raise exceptions.Unknown_Error
+                    raise e
+                    # raise exceptions.Unknown_Error

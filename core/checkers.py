@@ -1,13 +1,14 @@
 import re
 import requests
+# import exceptions
 from . import exceptions
 
 
 
 ######################################################  VIDEO  ######################################################
 # reference for video_url_regex https://regex101.com/r/OY96XI/5
-video_url_regex = re.compile(r"(?<=v=)(.{11})(?:&|$)", flags=re.MULTILINE)
-video_id_regex = re.compile(r"(^[a-zA-Z0-9-]{11}$)")
+video_url_regex = re.compile(r"(?<=v=)([a-zA-Z0-9-_]{11})(?:&|$)", flags=re.MULTILINE)
+video_id_regex = re.compile(r"(^[a-zA-Z0-9-_]{11}$)")
 
 def check_video_id_or_url(video_id_or_url):
     
@@ -32,13 +33,13 @@ def check_video_id_or_url(video_id_or_url):
 
 
 ######################################################  PLAYLIST  ######################################################
-playlist_url_regex = re.compile(r"(?<=list=)(.{34})(?:[&]|$)")
-playlist_id_regex = re.compile(r"^[a-zA-Z0-9-]{34}$")
+playlist_url_regex = re.compile(r"(?<=list=)[a-zA-Z0-9-_]+?(?=&|$)")
+playlist_id_regex = re.compile(r"^[a-zA-Z0-9-_]+$")
 
 def check_playlist_id_or_url(playlist_id_or_url):
 
     #assuming user passed a palylist_id
-    if len(playlist_id_or_url)==34:
+    if 12<=len(playlist_id_or_url)<=43:
         playlist_id= playlist_id_regex.findall(playlist_id_or_url)
         if len(playlist_id)==1:
             return playlist_id[0]
@@ -53,8 +54,6 @@ def check_playlist_id_or_url(playlist_id_or_url):
 
     # raising exception for invalid inpt
     raise exceptions.Invalid_Playlist_Id()
-
-
 
 
 ######################################################  API KEY  ######################################################

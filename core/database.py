@@ -88,8 +88,9 @@ class Database:
     SELECT_Playlists = f"""SELECT * FROM {TABLES["Playlists"]};"""
     SELECT_Playlist_id = f"""SELECT playlist_id FROM {TABLES["Playlists"]} WHERE id=(?);"""
     SELECT_Playlist_info = f"""SELECT * FROM {TABLES["Playlists"]} WHERE playlist_id=(?) OR id=(?);"""
+    SELECT_Playlist_name_by_playlist_id = f"""SELECT name FROM {TABLES["Playlists"]} WHERE playlist_id=(?);"""
     SELECT_Videos = f"""SELECT * FROM {TABLES["Videos"]};"""
-    SELECT_Videos_by_playlist_id = f"""SELECT * FROM {TABLES["Videos"]} WHERE playlist_id=(?);"""
+    SELECT_Videos_by_playlist_id = f"""SELECT video_id FROM {TABLES["Videos"]} WHERE playlist_id=(?);"""
     SELECT_Video_info = f"""SELECT * FROM {TABLES["Videos"]} WHERE video_id=(?) OR id=(?);"""
     SELECT_Errors = f"""SELECT * FROM {TABLES["Errors"]};"""
 
@@ -113,7 +114,7 @@ class Database:
     def create_database(self, cursor="Don't provide value for this"):
         for table in self.TABLES:
             sql_command = getattr(self, f"{table}_schema")
-            print(sql_command)
+            # print(sql_command)
             cursor.execute(sql_command)
 
 
@@ -153,6 +154,10 @@ class Database:
     def get_playlists(self, cursor="Don't provide value for this"):
         results = cursor.execute(self.SELECT_Playlists).fetchall()
         return results
+    
+    @connection_decorator
+    def get_playlist_name(self,playlist_id, cursor="Don't provide value for thi"):
+        return cursor.execute(self.SELECT_Playlist_name_by_playlist_id, (playlist_id,)).fetchone()
 
     @connection_decorator
     def get_playlist_info(self, playlist_id=None, id=None, cursor="Don't provide value for this"):
@@ -161,7 +166,7 @@ class Database:
 
     @connection_decorator
     def get_playlist_id(self, id, cursor="Don't provide value for this"):
-        playlist_id = cursor.execute(self.SELECT_Playlist_id, (id,)).fetchone()[0]
+        playlist_id = cursor.execute(self.SELECT_Playlist_id, (id,)).fetchone()
         return playlist_id
 
     @connection_decorator
@@ -172,7 +177,7 @@ class Database:
     def update_playlist_download_status(self, is_downloaded=0, playlist_id=None, id=None, cursor="Don't provide value for this"):
         """
         If the value of is_downloaded is set to 1 then the playlist will be treated as downloaded.
-        Else is_downloaded is set to 0 the palylist will be treated as not downloaded.
+        Else is_downloaded is set to 0 the playlist will be treated as not downloaded.
         """
         cursor.execute(self.UPDATE_Playlist_download_status, (is_downloaded, id, playlist_id))
     
@@ -243,6 +248,9 @@ class Database:
         results = cursor.execute(self.SELECT_Errors).fetchall()
         return results
 
+if not os.path.exists(Database.DB_NAME) or os.path.getsize(Database.DB_NAME)==0:
+    a = Database()
+    a.create_database()
 
 if __name__=="__main__":
     a = Database()

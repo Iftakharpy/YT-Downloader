@@ -3,6 +3,7 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication
 from time import sleep
 
+from .logger import Logger_Decorator_For_Download_Func
 from pytube import Stream,YouTube
 import urllib
 
@@ -14,10 +15,25 @@ class YT_object_Loader(QObject):
         super().__init__()
         self.video_url = video_url
     
+    def close_THREAD_and_return_the_obj(self, yt_obj):
+        self.yt_object = yt_obj
+        self.THREAD.exit()
+        return self.yt_object
+    
     def run(self):
         try:
-            self.completed.emit(YouTube(self.video_url))
+            self.THREAD = QThread()
+            self.loading_yt_object = Logger_Decorator_For_Download_Func(YouTube, self.video_url)
+            self.loading_yt_object.moveToThread(self.THREAD)
+            self.loading_yt_object.loaded.connect(self.close_THREAD_and_return_the_obj)
+
+            self.THREAD.started.connect(self.loading_yt_object.run)
+            self.THREAD.start()
+
+            print(f"sent {self.yt_object}")
+            self.completed.emit(self.yt_object)
         except Exception as e:
+            print(str(e))
             self.error_occured.emit(e)
 
 

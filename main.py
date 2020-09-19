@@ -41,7 +41,7 @@ class APP(QMainWindow, Window, object):
     
     SLEEP_TIME = 0.0001
     #time out for status bar messages
-    STATUS_TIMEOUT = 10000 
+    STATUS_TIMEOUT = 10000
     
     #playlist_quality to download indexes are taken from playlist_qualities QComboBox
     PLAYLIST_QUALITY_INDEX = 0 #{0:"best progressive", 1:"best audio", 2:"best video", 3:"best audio+video"}
@@ -107,50 +107,26 @@ class APP(QMainWindow, Window, object):
         self.cancel_playlist_video.setDisabled(True)
         self.stop_downloading_playlist.setDisabled(True)
         self.download_playlist.setEnabled(True)
+        self.playlist_qualities.setEnabled(True)
+
+
 
     def _connect_functions_to_buttons(self):
         ##################### VIDEO TAB ########################
-        # connecting function to download button
-        self.download_video.clicked.connect(self.handle_download_video_clicked)
-
-        # connecting function to load_qualites button
-        self.load_qualities.clicked.connect(self.handle_load_qualities_clicked)
-
-        # connecting function to pause_resume button
-        self.pause_resume.clicked.connect(self.handle_pause_resume_clicked)
-
-        # connecting function to cancel button
-        self.cancel.clicked.connect(self.handle_cancel_clicked)
+        # connecting functions video_tab
+        self._functions_to_video_tab_buttons()
         #################### END VIDEO TAB ######################
 
-
-
         #################### PLAYLIST TAB ######################
-        self.download_playlist.clicked.connect(self.handle_download_playlist_clicked)
-
-        # connecting function to playlist_qualities to get the video qualities
-        self.playlist_qualities.currentIndexChanged.connect(self.handle_playlist_qualities_changed)
-
-        self.pause_resume_playlist_video.clicked.connect(self.handle_pause_resume_playlist_video)
-
-        self.cancel_playlist_video.clicked.connect(self.handle_cancel_playlist_video)
-
-        self.stop_downloading_playlist.clicked.connect(self.handle_stop_downloading_playlist)
+        # connecting function to playlist tab
+        self._connect_functions_to_plalist_tab()
         ################## END PLAYLIST TAB ####################
 
-
-
         #################### SETTINGS TAB #######################
-        # connecting function to videos_location_browse button
-        self.videos_location_browse.clicked.connect(self.handle_videos_location_browse)
-
-        # connecting function to playlists_location_browse button
-        self.playlists_location_browse.clicked.connect(self.handle_playlists_location_browse)
-
-        # connecting function to save_settigs button
-        self.save_settings.clicked.connect(self.write_settings)
-        self.api_key.editingFinished.connect(self.write_settings)
+        # connecting function to settings tab
+        self._connect_functions_to_settings_tab_buttons()
         ################## END SETTINGS TAB #####################
+
 
 
     def _get_text(self, name_of_qt_widget):
@@ -165,6 +141,13 @@ class APP(QMainWindow, Window, object):
         alert.exec()
 
     def _validate_folder(self, folder_path):
+        """
+        checks if the provided folder_path exists and if this is a directory or not
+        >>> self._validate_folder("C:\\") #if the os is windows
+        True
+        >>> self._validate_folder("/root") #it the os is linux
+        False
+        """
         return os.path.exists(folder_path) and os.path.isdir(folder_path)
 
     def _handle_error_on_different_thread(self, error):
@@ -172,18 +155,34 @@ class APP(QMainWindow, Window, object):
             title = error.title
             message = str(error)
             self._show_alert(title,message,self.ICONS.critical)
-            if self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.isRunning:
-                self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
         except Exception as e:
-            # raise e
+            if str(error) == "'formats'":
+                self._show_alert("Live video Error",
+                                "\nMay be you are trying to download a live straming video which is not possible right now.",
+                                self.ICONS.critical)
+                self.DB.insert_error(f"Live video download error","User tried to download a live stream."+str(error))
+                return
             self._show_alert("Error Occured",
                             str(e)+"\nError Occured on a child Thread.\nMay be you lost internet connection.",
                             self.ICONS.critical)
-            if self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.isRunning:
-                self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
+            self.DB.insert_error(f"_handle_error_on_different_thread",str(error))
 
 
 #############################################   VIDEO TAB   #############################################
+    def _functions_to_video_tab_buttons(self):
+        # connecting function to download button
+        self.download_video.clicked.connect(self.handle_download_video_clicked)
+
+        # connecting function to load_qualites button
+        self.load_qualities.clicked.connect(self.handle_load_qualities_clicked)
+
+        # connecting function to pause_resume button
+        self.pause_resume.clicked.connect(self.handle_pause_resume_clicked)
+
+        # connecting function to cancel button
+        self.cancel.clicked.connect(self.handle_cancel_clicked)
+
+
     def receive_streams(self,streams):
         self.VIDEO_TAB_STREAMS = streams
         self.download_video.setEnabled(True)
@@ -201,38 +200,6 @@ class APP(QMainWindow, Window, object):
 
         self.LOADER_THREAD.started.connect(self.loader.run)
         self.LOADER_THREAD.start()
-        
-
-
-    # def _load_qualities_same_thread(self):
-    #     #cleanning up
-    #     if self.qualities.count():
-    #         self.qualities.clear()
-    #         self.VIDEO_TAB_STREAMS.clear()
-        
-    #     audios = self.yt_object.streams.filter(only_audio=True, progressive=False).order_by("abr")
-    #     videos = self.yt_object.streams.filter(only_video=True, progressive=False).order_by("resolution")
-    #     progressive_videos = self.yt_object.streams.filter(progressive=True).order_by("resolution")
-
-    #     #adding progressive streams into the qualities combo box
-    #     for stream in progressive_videos:
-    #         combo_text = f"{stream.resolution} audio+video {File_Size_Converter(stream.filesize)}"
-    #         self.qualities.addItem(combo_text)
-    #         self.VIDEO_TAB_STREAMS.append(stream)
-    #     #adding video streams into the qualities combo box
-    #     for stream in videos:
-    #         combo_text = f"{stream.resolution} video only {File_Size_Converter(stream.filesize)}"
-    #         self.qualities.addItem(combo_text)
-    #         self.VIDEO_TAB_STREAMS.append(stream)
-    #     #adding audio streams into the qualities combo box
-    #     for stream in audios:
-    #         combo_text = f"{stream.abr} audio only {File_Size_Converter(stream.filesize)}"
-    #         self.qualities.addItem(combo_text)
-    #         self.VIDEO_TAB_STREAMS.append(stream)
-        
-    #     if self.VIDEO_TAB_STREAMS:
-    #         self.qualities.setCurrentIndex(0)
-
 
 
     def _get_selected_stream(self):
@@ -286,7 +253,11 @@ class APP(QMainWindow, Window, object):
             self._load_qualities_seperate_thread()
 
         except exceptions.Invalid_Video_Id as e:
-            self._show_alert(e.title, e.message, self.ICONS.warning)
+            try:
+                self._show_alert(e.title, e.message, self.ICONS.warning)
+            except KeyError:
+                print(e, "line 258")
+                self._handle_error_on_different_thread(e)
         except Exception as e:
             self._handle_error_on_different_thread(e)
 
@@ -340,10 +311,8 @@ class APP(QMainWindow, Window, object):
         self.VIDEO_DOWNLOAD_THREAD.start()
         self.currently_downloading.setText(f"Downloading {self.yt_object.title}")
     
-    def handle_completed_download(self, *args):
-        if len(args)>=2:
-            self._set_statusbar_text(f"Downloaded {args[0]} to \"{args[1]}\"")
-        self._set_statusbar_text("\n".join(args))
+    def handle_completed_download(self, file_path):
+        self._set_statusbar_text(file_path)
         self.download_video.setEnabled(True)
         self._set_video_tab_to_idle(clear_qualities=False, disable_download=False)
         self.VIDEO_DOWNLOAD_THREAD.exit()
@@ -354,234 +323,161 @@ class APP(QMainWindow, Window, object):
 
 
 #############################################   PLAYLIST TAB   ##############################################
-    def handle_playlist_qualities_changed(self):
-        self.PLAYLIST_QUALITY_INDEX = self.playlist_qualities.currentIndex()
-    
-    # def receive_playlist_yt_object(self, yt_object):
-    #     self.PLAYLIST_YT_OBJECT_LOADER_THREAD.exit()
-    #     self.playlist_yt_object = yt_object
+    def _connect_functions_to_plalist_tab(self):
+        # connecting function to download_playlist button
+        self.download_playlist.clicked.connect(self.handle_download_playlist_clicked)
 
-    # def load_playlist_yt_object(self, video_url):
-    #     self.PLAYLIST_YT_OBJECT_LOADER_THREAD = QThread()
+        # connecting function to playlist_qualities to get the video qualities
+        self.playlist_qualities.currentIndexChanged.connect(self.handle_playlist_qualities_changed)
+
+        self.pause_resume_playlist_video.clicked.connect(self.handle_pause_resume_playlist_video_clicked)
+
+        self.cancel_playlist_video.clicked.connect(self.handle_cancel_playlist_video_clicked)
+
+        self.stop_downloading_playlist.clicked.connect(self.handle_stop_downloading_playlist)
+
+
+
+    def _download_video_with_playlist_quality_index(self, playlist_quality_index = 0, ):
+        filter_obj = Stream_Filter(self.palylist_yt_object)
+        if self.PLAYLIST_QUALITY_INDEX == 0:
+            selected_stream = filter_obj.get_highest_quality_progressive_stream()
+        elif self.PLAYLIST_QUALITY_INDEX == 1:
+            selected_stream = filter_obj.get_highest_quality_audio_stream()
+        elif self.PLAYLIST_QUALITY_INDEX == 2:
+            selected_stream = filter_obj.get_highest_quality_video_stream()
+        else:
+            raise ValueError("Caller should have handled this")
         
-    #     self.yt_loader = YT_object_Loader(video_url)
-    #     self.yt_loader.moveToThread(self.PLAYLIST_YT_OBJECT_LOADER_THREAD)
-    #     self.yt_loader.completed.connect(self.receive_yt_object)
+        self.currently_downloading_playlist_video.setText(self.palylist_yt_object.title)
 
-    #     self.PLAYLIST_YT_OBJECT_LOADER_THREAD.started.connect(self.yt_loader.run)
-    #     self.PLAYLIST_YT_OBJECT_LOADER_THREAD.start()
-    #     while not self.VIDEO_TAB_STREAMS:
-    #         QApplication.sendPostedEvents()
-    #         QApplication.processEvents()
-    #         sleep(self.SLEEP_TIME)
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD = Download_Thread(self.palylist_yt_object,
+                                                    selected_stream, 
+                                                    self.DOWNLOADING_PLAYLIST_VIDEO_ID,
+                                                    parent=None
+                                                    )
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.progress_updated.connect(self.playlist_video_progress.setValue)
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.download_completed.connect(self.handle_playlist_video_downloaded)
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.download_cancelled.connect(self.handle_signal_of_playlist_video_cancellation)
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.error_occured.connect(self.handle_error_while_downloading_playlist_video)
 
-    def handle_pause_resume_playlist_video(self):
+        self.pause_resume_playlist_video.setEnabled(True)
+        self.cancel_playlist_video.setEnabled(True)
+        self.download_playlist.setDisabled(True)
+        # QApplication.processEvents()
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.start()
+        self.currently_downloading.setText(f"Downloading {self.palylist_yt_object.title}")
+
+
+
+    def handle_error_while_downloading_playlist_video(self, error):
+        self.DB.insert_error(f"error while downloading {self.DOWNLOADING_PLAYLIST_VIDEO_ID} playlist_video",str(error))
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
+        self.DOWNLOADED_PLAYLIST_VIDEO_ID = self.DOWNLOADING_PLAYLIST_VIDEO_ID
+        self.handle_error_while_downloading(error)
+    
+    def handle_cancel_playlist_video_clicked(self):
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.cancel_download()
+    
+    def handle_pause_resume_playlist_video_clicked(self):
         if self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.paused == True:
             self.pause_resume_playlist_video.setText("Pause")
             self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.resume_download()
             return
         self.pause_resume_playlist_video.setText("Resume")
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.pause_download()
-
-    def handle_cancel_playlist_video(self):
-        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.cancel_download()
-
-    def handle_stop_downloading_playlist(self):
-        self.STOP_DOWNLOADING_PLAYLIST=True
-        self._set_playlist_tab_to_idle()
-
+    
     def handle_signal_of_playlist_video_cancellation(self):
         self._set_playlist_tab_to_idle()
+        self.CANCELLED_PLAYLIST_VIDEO_ID = self.DOWNLOADING_PLAYLIST_VIDEO_ID
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
 
-
-
-    def filter_playlist_video_stream(self, yt_object=pl_video_yt_object, quality_index=PLAYLIST_QUALITY_INDEX):
-        if not yt_object:
-            yt_object = self.pl_video_yt_object
-        if quality_index == 0:
-            self.playlist_video_stream = Stream_Filter(yt_object).get_highest_quality_progressive_stream()
-            return
-        elif quality_index == 1:
-            self.playlist_video_stream = Stream_Filter(yt_object).get_highest_quality_video_stream()
-            return
-        elif quality_index == 2:
-            self.playlist_video_stream = Stream_Filter(yt_object).get_highest_quality_audio_stream()
-        print(self.playlist_video_stream)
-        raise ValueError("Caller function should have handelled this error.")
-
-
-    def handle_playlist_video_downloaded(self, path):
+    def handle_playlist_video_downloaded(self, file_path):
+        self._set_statusbar_text(file_path)
+        self._set_playlist_tab_to_idle()
+        self.DOWNLOADED_PLAYLIST_VIDEO_ID = self.DOWNLOADING_PLAYLIST_VIDEO_ID
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
-        self._set_statusbar_text(path)
-        self.downloaded_playlist_video = True
-        # self._set_playlist_tab_to_idle()
 
+    def handle_stop_downloading_playlist(self):
+        self.SKIP_DOWNLOADING_PLALIST = True
 
-    def start_downloading_playlist_video_on_different_thread(self, pl_video_yt_object, playlist_video_stream, video_id, parent=None, file_name=None):
-        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD = Download_Thread(self.pl_video_yt_object,
-                                                            self.playlist_video_stream, 
-                                                            video_id,
-                                                            parent=None
-                                                            )
-        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.progress_updated.connect(self.playlist_video_progress.setValue)
-        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.download_completed.connect(self.handle_playlist_video_downloaded)
-        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.download_cancelled.connect(self.handle_signal_of_playlist_video_cancellation)
-        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.error_occured.connect(self._handle_error_on_different_thread)
-
-        self.pause_resume_playlist_video.setEnabled(True)
-        self.cancel_playlist_video.setEnabled(True)
-        self.stop_downloading_playlist.setEnabled(True)
-        
-        if file_name:
-            QApplication.sendPostedEvents()
-            QApplication.processEvents()
-            self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.run(file_name=file_name)
-        else:
-            QApplication.sendPostedEvents()
-            QApplication.processEvents()
-            self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.run()
-            
-
-        self.currently_downloading_playlist_video.setText(f"Downloading {self.pl_video_yt_object.title}")
-        while self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.isRunning:
-            # print("running thread")
-            QApplication.sendPostedEvents()
-            QApplication.processEvents()
-            sleep(self.SLEEP_TIME)
-            if self.STOP_DOWNLOADING_PLAYLIST or self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.cancelled==True or self.downloaded_playlist_video:
-                QApplication.sendPostedEvents()
-                QApplication.processEvents()
-                self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.cancel_download()
-                self.downloaded_playlist_video=False
-                return
-
+    def handle_playlist_qualities_changed(self):
+        self.PLAYLIST_QUALITY_INDEX = self.playlist_qualities.currentIndex()
 
     def handle_download_playlist_clicked(self):
-        self.PL_VIDEO_IDS = []
+        self.SKIP_DOWNLOADING_PLALIST = False
+
         playlist_id_inpt = self._get_text("playlist_id")
-        try:
-            playlist_id = checkers.check_playlist_id_or_url(playlist_id_inpt)
-        except exceptions.Invalid_Playlist_Id as e:
-            self._show_alert(e.title, e.message)
-            return
-        self._set_statusbar_text("Loading video ids from YouTube Data API v3.")
+        playlist_id = checkers.check_playlist_id_or_url(playlist_id_inpt)
 
-        QApplication.sendPostedEvents()
-        QApplication.processEvents()
-        try:
-            self.PL_VIDEO_IDS = playlist_loader.get_video_ids(playlist_id,self.SETTINGS.api_key)
-        except exceptions.API_Error as e:
-            self._show_alert(e.title, str(e), self.ICONS.critical)
-        except Exception as e:
-            self.DB.insert_error("Playlist error", str(e))
-            self._show_alert("Error Occured", str(e))
-
-        QApplication.sendPostedEvents()
-        QApplication.processEvents()
-        self.playlist_name = playlist_loader.get_playlist_name(playlist_id)
-
-        self.valid_dir_name_for_playlist = formatters.make_valid_dir_name(self.playlist_name)
-        self.palylist_dir = os.path.join(self.SETTINGS.playlist_dir, self.valid_dir_name_for_playlist)
-        os.makedirs(self.palylist_dir, exist_ok=True)
-        os.chdir(self.palylist_dir)
-        while not self.PL_VIDEO_IDS:
-            QApplication.sendPostedEvents()
-            QApplication.processEvents()
-            continue
+        self.PLAYLIST_VIDEO_IDS,self.PLAYLIST_NAME = playlist_loader.get_video_ids(playlist_id)
         
-        self.download_playlist.setDisabled(True)
-        self.stop_downloading_playlist.setEnabled(True)
-        self.pause_resume_playlist_video.setEnabled(True)
+        playlist_dir = os.path.join(self.SETTINGS.playlist_dir, self.PLAYLIST_NAME)
+        os.makedirs(playlist_dir, exist_ok=True)
+        os.chdir(playlist_dir)
 
-        self.STOP_DOWNLOADING_PLAYLIST = False
-        for index,video_id in enumerate(self.PL_VIDEO_IDS):
-            self.playlist_video_number.setText(f"Downloading {index+1}/{len(self.PL_VIDEO_IDS)} of \"{self.playlist_name}\"")
-            QApplication.sendPostedEvents()
-            QApplication.processEvents()
-            self._load_playlist_video_yt_object(formatters.format_video_id_to_url(video_id))
-            self.currently_downloading.setText(self.pl_video_yt_object.title)
+        for index, video_id in enumerate(self.PLAYLIST_VIDEO_IDS):
+            print(video_id)
+            self.DOWNLOADED_PLAYLIST_VIDEO_ID = None
+            self.CANCELLED_PLAYLIST_VIDEO_ID = None
+            self.DOWNLOADING_PLAYLIST_VIDEO_ID = video_id
 
-            if self.PLAYLIST_QUALITY_INDEX<=2:
-                QApplication.sendPostedEvents()
-                QApplication.processEvents()
-                self.start_downloading_playlist_video_on_different_thread(self.pl_video_yt_object,
-                                                                        self.filter_playlist_video_stream(), 
-                                                                        video_id,
-                                                                        parent=None)
-                self._set_playlist_tab_to_idle()
-                
+            self.download_playlist.setDisabled(True)
+            self.pause_resume_playlist_video.setText("Pause")
+            self.pause_resume_playlist_video.setDisabled(True)
+            self.cancel_playlist_video.setEnabled(True)
+            self.stop_downloading_playlist.setEnabled(True)
             
-            elif self.PLAYLIST_QUALITY_INDEX==3:
-                QApplication.sendPostedEvents()
+            try:
+                #creating self.palylist_yt_object
+                formatted_url = formatters.format_video_id_to_url(video_id)
+                QApplication.sendPostedEvents() 
                 QApplication.processEvents()
-                self.start_downloading_playlist_video_on_different_thread(self.pl_video_yt_object,
-                                                                        self.filter_playlist_video_stream(quality_index=1), 
-                                                                        video_id,
-                                                                        parent=None,
-                                                                        file_name=self.pl_video_yt_object.title+"video")
-                self._set_playlist_tab_to_idle()
-                
-                QApplication.sendPostedEvents()
+                self.palylist_yt_object = YouTube(formatted_url)#self.load_yt_object(formatted_url)
+            except exceptions.Invalid_Video_Id as e:
+                try:
+                    self._show_alert(e.title, e.message, self.ICONS.warning)
+                except KeyError:
+                    print(e, "line 258")
+                    self._handle_error_on_different_thread(e)
+            except Exception as e:
+                self._handle_error_on_different_thread(e)
+
+            finally:
+                self._set_statusbar_text(f"Loaded {self.palylist_yt_object.title}")
+
+            if self.PLAYLIST_QUALITY_INDEX <= 2:
+                self._download_video_with_playlist_quality_index(self.PLAYLIST_QUALITY_INDEX)
+            elif self.PLAYLIST_QUALITY_INDEX == 3:
+                self._download_video_with_playlist_quality_index(1)
+                self._download_video_with_playlist_quality_index(2)
+            
+            self.playlist_video_number.setText(f"Downloading {index+1}/{len(self.PLAYLIST_VIDEO_IDS)} of {self.PLAYLIST_NAME}")
+            
+            while not self.DOWNLOADED_PLAYLIST_VIDEO_ID==video_id and not self.CANCELLED_PLAYLIST_VIDEO_ID==video_id and not self.SKIP_DOWNLOADING_PLALIST:
+                QApplication.sendPostedEvents() 
                 QApplication.processEvents()
-                self.start_downloading_playlist_video_on_different_thread(self.pl_video_yt_object,
-                                                                        self.filter_playlist_video_stream(quality_index=2), 
-                                                                        video_id,
-                                                                        parent=None,
-                                                                        file_name=self.pl_video_yt_object.title+"audio")
-                self._set_playlist_tab_to_idle()
-                
-
-            if self.STOP_DOWNLOADING_PLAYLIST:
-                self.STOP_DOWNLOADING_PLAYLIST = False
-            self._set_playlist_tab_to_idle()
-        self._set_playlist_tab_to_idle()
-            # self.PLAYLIST_VIDEO_DOWNLOAD_THREAD = Download_Thread(self.pl_video_yt_object,
-            #                                             self.playlist_video_stream, 
-            #                                             video_id,
-            #                                             parent=None
-            #                                             )
-            # self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.progress_updated.connect(self.playlist_video_progress.setValue)
-            # self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.download_completed.connect(self.handle_completed_download)
-            # self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.download_cancelled.connect(self.handle_signal_of_playlist_video_cancellation)
-            # self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.error_occured.connect(self.handle_error_while_downloading)
-
-            # self.pause_resume_playlist_video.setEnabled(True)
-            # self.cancel_playlist_video.setEnabled(True)
-            # self.stop_downloading_playlist.setEnabled(True)
-
-            # self.VIDEO_DOWNLOAD_THREAD.start()
-            # self.currently_downloading.setText(f"Downloading {self.yt_object.title}")
-            # while self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.isRunning:
-            #     QApplication.sendPostedEvents()
-            #     QApplication.processEvents()
-            #     sleep(self.SLEEP_TIME)
-            #     if self.STOP_DOWNLOADING_PLAYLIST:
-            #         QApplication.sendPostedEvents()
-            #         QApplication.processEvents()
-            #         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.cancel_download()
-
-
-    def receive_playlist_video_yt_object(self, pl_yt_object):
-        self.pl_video_yt_object = pl_yt_object
-        self.PLAYLIST_YT_OBJECT_LOADER_THREAD.exit()
-
-    def _load_playlist_video_yt_object(self, video_url):
-        self.pl_video_yt_object = None
-        self.PLAYLIST_YT_OBJECT_LOADER_THREAD = QThread()
-
-        self.playlist_video_yt_loader = YT_object_Loader(video_url)
-        self.playlist_video_yt_loader.moveToThread(self.PLAYLIST_YT_OBJECT_LOADER_THREAD)
-        self.playlist_video_yt_loader.completed.connect(self.receive_playlist_video_yt_object) #reciving the yt object
-        self.playlist_video_yt_loader.error_occured.connect(self.handle_error_while_downloading)
-
-        self.PLAYLIST_YT_OBJECT_LOADER_THREAD.started.connect(self.playlist_video_yt_loader.run)
-        self.PLAYLIST_YT_OBJECT_LOADER_THREAD.start()
-        while not self.pl_video_yt_object:
-            QApplication.sendPostedEvents()
-            QApplication.processEvents()
-            sleep(self.SLEEP_TIME)
+                sleep(self.SLEEP_TIME)
+                # print("stuck")
+                if self.SKIP_DOWNLOADING_PLALIST==True:
+                    self.DOWNLOADED_PLAYLIST_VIDEO_ID=video_id
+                    break
         
+            if self.SKIP_DOWNLOADING_PLALIST==True:
+                break
+        if self.SKIP_DOWNLOADING_PLALIST:
+            #stoping download of the current video
+            self.handle_cancel_playlist_video_clicked()
+            self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
+        self._set_playlist_tab_to_idle()
+
+
+        # self.playlist_video_progress.setValue(0)
+
+        # self.download_playlist.setEnabled(True)
+        # self.playlist_qualities.setEnabled(True)
+
+    
 
 ###########################################   END PLAYLIST TAB   ############################################
 
@@ -589,6 +485,20 @@ class APP(QMainWindow, Window, object):
 
 
 #############################################   SETTINGS TAB   #############################################
+    def _connect_functions_to_settings_tab_buttons(self):
+        # connecting function to videos_location_browse button
+        self.videos_location_browse.clicked.connect(self.handle_videos_location_browse)
+
+        # connecting function to playlists_location_browse button
+        self.playlists_location_browse.clicked.connect(self.handle_playlists_location_browse)
+
+        # connecting function to save_settigs button
+        self.save_settings.clicked.connect(self.write_settings)
+        
+        self.api_key.editingFinished.connect(self.write_settings)
+
+
+
     def _update_settings_fields_palceholders(self):
         self.api_key.setPlaceholderText(self.SETTINGS.api_key)
         self.videos_location.setPlaceholderText(self.SETTINGS.video_dir)

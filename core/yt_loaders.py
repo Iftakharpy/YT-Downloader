@@ -25,12 +25,10 @@ class YT_object_Loader(QObject):
             self.THREAD = QThread()
             self.loading_yt_object = Logger_Decorator_For_Download_Func(YouTube, self.video_url)
             self.loading_yt_object.moveToThread(self.THREAD)
-            self.loading_yt_object.loaded.connect(self.close_THREAD_and_return_the_obj)
 
             self.THREAD.started.connect(self.loading_yt_object.run)
             self.THREAD.start()
 
-            print(f"sent {self.yt_object}")
             self.completed.emit(self.yt_object)
         except Exception as e:
             print(str(e))
@@ -69,7 +67,7 @@ class Load_Qualities(QObject):
             except Exception as e:
                 self.error_occured.emit(e)
             
-            combo_text = f"{stream.resolution} audio+video {File_Size_Converter(size)}"
+            combo_text = f"{stream.resolution} {stream.fps}fps audio+video {File_Size_Converter(size)} (progressive video)"
             #to not block other processes
             QApplication.sendPostedEvents()
             QApplication.processEvents()
@@ -86,7 +84,7 @@ class Load_Qualities(QObject):
             except Exception as e:
                 self.error_occured.emit(e)
 
-            combo_text = f"{stream.resolution} video only {File_Size_Converter(size)}"
+            combo_text = f"{stream.resolution} {stream.fps}fps video only {File_Size_Converter(size)}"
             #to not block other processes
             QApplication.sendPostedEvents()
             QApplication.processEvents()

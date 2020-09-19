@@ -32,11 +32,10 @@ def extract_video_ids(json_res):
 
 
 def get_playlist_name(playlist_id):
-    global DEFAULT_PLAYLIST_NAME
+    # global DEFAULT_PLAYLIST_NAME
     page = requests.get(formatters.format_playlist_id_to_url(playlist_id))
-    soup = bs4.BeautifulSoup(page.text,features="html.parser")
     try:
-        palylist_title = soup.find("title").text().rsplit("-",1)[0].strip()
+        palylist_title = re.findall(r"<title>(.*?)</title>", page.text, flags=re.MULTILINE)[0].rsplit("-",1)[0].strip()
     except Exception as e:
         palylist_title = f"{playlist_id} - {DEFAULT_PLAYLIST_NAME}"
 
@@ -80,7 +79,7 @@ def get_video_ids(playlist_id, api_key=SETTINGS.api_key, api_endpoint=YOUTUBE_AP
         params["pageToken"] = next_page_token
 
         #getting data from youtube api
-        res = requests.get(api,params)
+        res = requests.get(api_endpoint,params)
         #parsing the response data from json format to python dictionary
         json_res = json.loads(res.text)
         
@@ -95,6 +94,6 @@ def get_video_ids(playlist_id, api_key=SETTINGS.api_key, api_endpoint=YOUTUBE_AP
     download_dir = SETTINGS.get_playlist_dir
     playlist_name = get_playlist_name(playlist_id)
     DB.insert_playlist(playlist_id, download_dir, playlist_name)
-    DB.insert_videos([(video_id,playlist_id) for video_id in VIDEO_IDS])
+    DB.insert_videos([(video_id, playlist_id) for video_id in VIDEO_IDS])
 
     return VIDEO_IDS, playlist_name

@@ -14,19 +14,22 @@ DB = Database()
 class Logger_Decorator_For_Download_Func(QObject):
     completed = pyqtSignal()
     MAX_RECURSIVE_CALLS = 700
-    def __init__(self, download_func, video_id, parent=None):
+    def __init__(self, download_func, video_id, file_name=None, parent=None):
         super().__init__(parent=parent)
         self.f = download_func
         self.video_id = video_id
+        self.file_name = file_name
 
-    def run(self, *args, **kwargs):
-        """
-        Always provide video_id in the first argument otherwise this function will break.
-        """
+    def run(self,*args,**kwargs):
         try:
-            return_value = self.f(*args, **kwargs)
-            self.completed.emit()
-            return return_value
+            if self.file_name:
+                return_value = self.f(filename=self.file_name)
+                self.completed.emit()
+                return return_value
+            else:
+                return_value = self.f()
+                self.completed.emit()
+                return return_value
         
         except exceptions.Download_Cancelled as e:
             return e.message
@@ -51,7 +54,7 @@ class Logger_Decorator_For_Download_Func(QObject):
             DB.insert_error(self.video_id, error_description=str(e)+"\njson.decoder.JSONDecodeError raised trying again.\nInternet connection lost")
             
             #recursing
-            self.f(*args, **kwargs)
+            self.run(*args, **kwargs)
 
 
         #RECURSION
@@ -62,7 +65,7 @@ class Logger_Decorator_For_Download_Func(QObject):
             DB.insert_error(self.video_id, error_description=str(e)+"\nTimeoutError raised trying again.\nInternet connection lost")
             
             #recursing
-            self.f(*args, **kwargs)
+            self.run(*args, **kwargs)
 
 
         #RECURSION But not pure recursion (it's a mixed bag)
@@ -76,7 +79,7 @@ class Logger_Decorator_For_Download_Func(QObject):
             for i in range(self.MAX_RECURSIVE_CALLS):
                 try:
                     #recrusing
-                    res = self.f(*args, **kwargs)
+                    res = self.run(*args, **kwargs)
                     return res
                 #if the same error raises trying again
                 except urllib.error.URLError as e:
@@ -85,7 +88,7 @@ class Logger_Decorator_For_Download_Func(QObject):
                 #if a different error occurs then recursing to let the same function handle the error
                 except Exception:
                     #recursing
-                    self.f(*args, **kwargs)
+                    self.run(*args, **kwargs)
             else:
                 
                 DB.insert_error(self.video_id, error_description=str(e)+"\nYou have lost internet connection. Check your network connection.\nInternet connection lost.")
@@ -103,7 +106,7 @@ class Logger_Decorator_For_Download_Func(QObject):
             DB.insert_error(self.video_id, error_description=str(e)+"\nKeyError raised trying again.\nInternet connection lost")
             
             #recursing
-            self.f(*args, **kwargs)
+            self.run(*args, **kwargs)
 
 
         #if all of the above recursive error catching fails and raises RecursionError then host must have lost network connection

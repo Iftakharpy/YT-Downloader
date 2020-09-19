@@ -29,6 +29,14 @@ class Database:
                 self.DB_NAME = os.path.join(BASE_DIR, db_name)
             else:
                 self.DB_NAME = os.path.join(BASE_DIR, db_name+".db")
+        
+        #making sure the database exists
+        self.__create_database_if_it_does_not_exists()
+
+
+    def __create_database_if_it_does_not_exists(self):
+        if not os.path.exists(Database.DB_NAME) or os.path.getsize(Database.DB_NAME)==0:
+            self.create_database()
 
 
     TABLES = {  #identifiers:table names
@@ -247,11 +255,3 @@ class Database:
     def get_errors(self, cursor="Don't provide value for this"):
         results = cursor.execute(self.SELECT_Errors).fetchall()
         return results
-
-if not os.path.exists(Database.DB_NAME) or os.path.getsize(Database.DB_NAME)==0:
-    a = Database()
-    a.create_database()
-
-if __name__=="__main__":
-    a = Database()
-    a.create_database()

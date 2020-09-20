@@ -294,6 +294,11 @@ class APP(QMainWindow, Window, object):
             self._show_alert("Error Occured While Downloading", str(e), self.ICONS.critical)
 
     def handle_download_video_clicked(self):
+
+        if not self._connected_to_internet():
+            self._show_alert("Connection Error","You are not connected to internt.\nConnect to internet and try again.")
+            return
+
         self.load_qualities.setDisabled(True)
         os.makedirs(self.SETTINGS.video_dir, exist_ok=True)
         os.chdir(self.SETTINGS.video_dir)
@@ -415,8 +420,17 @@ class APP(QMainWindow, Window, object):
     def handle_download_playlist_clicked(self):
         self.SKIP_DOWNLOADING_PLALIST = False
 
+        if not self._connected_to_internet():
+            self._show_alert("Connection Error","You are not connected to internt.\nConnect to internet and try again.")
+            return            
+
         playlist_id_inpt = self._get_text("playlist_id")
-        playlist_id = checkers.check_playlist_id_or_url(playlist_id_inpt)
+        
+        try:
+            playlist_id = checkers.check_playlist_id_or_url(playlist_id_inpt)
+        except exceptions.Invalid_Playlist_Id as e:
+            self._show_alert(e.title, e.message)
+            return
 
         try:
             self.PLAYLIST_VIDEO_IDS,self.PLAYLIST_NAME = playlist_loader.get_video_ids(playlist_id, self.SETTINGS.api_key)
@@ -437,6 +451,7 @@ class APP(QMainWindow, Window, object):
             self.DOWNLOADING_PLAYLIST_VIDEO_ID = video_id
 
             self.download_playlist.setDisabled(True)
+            self.playlist_qualities.setDisabled(True)
             self.pause_resume_playlist_video.setText("Pause")
             self.pause_resume_playlist_video.setDisabled(True)
             self.cancel_playlist_video.setEnabled(True)

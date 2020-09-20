@@ -1,0 +1,2 @@
+del core\data.db && del core\settings.json && pyinstaller -F -w -n "YT Downloader - windows" -i "gui\images\youtube_256x256.ico" --add-data "core;core" --add-data "gui;gui" main.py && rmdir /s /q "build" && rmdir /s /q "__pycache__" && del "YT Downloader - windows.spec"
+REM pyinstaller -F -w -n "YT Downloader" --upx-dir "C:\Users\LENOVO\Downloads\upx-3.96-win64" --add-data "core;core" --add-data "gui;gui" -i "gui\images\youtube_256x256.ico" main.py

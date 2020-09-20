@@ -3,17 +3,22 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
 
 ### Python ###
-env/*
+env/
 __pycache__/
-settings.json
-data.db
+*/settings.json
+*/data.db
+
+### PyInstaller ###
+build/
+
+
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
 *.code-workspace
 
 ### VisualStudioCode Patch ###

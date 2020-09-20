@@ -1,8 +1,11 @@
+import json
+
+
 #base module for custom exceptions
 
 class Invalid_API_Key(Exception):
     title = "Invalid YouTube API key"
-    message = "Currently saved api key is invalid"
+    message = "Currently saved api key is invalid.\nGet a YouTube API key then go to the settings tab and save the key.\nAnd try again."
     def __init__(self, message=None):
         if message:
             self.message = message
@@ -14,7 +17,16 @@ class API_Error(Exception):
     title = "YouTube DATA API Error"
     message = "this should be updated"
     def __init__(self, message):
-        self.message = message
+        self._raw_message = message
+
+        self.json_error = json.loads(message)
+        
+        self.message = self.json_error["error"]["message"]
+        self.error_code = self.json_error["error"]["code"]
+        self.errors = self.json_error["error"]["errors"]
+        if self.error_code==400:
+            self.title += " - " + Invalid_API_Key.title
+            self.message += "\n" + Invalid_API_Key.message
     
     def __str__(self):
         return self.message

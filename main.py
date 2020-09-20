@@ -256,7 +256,6 @@ class APP(QMainWindow, Window, object):
             try:
                 self._show_alert(e.title, e.message, self.ICONS.warning)
             except KeyError:
-                print(e, "line 258")
                 self._handle_error_on_different_thread(e)
         except Exception as e:
             self._handle_error_on_different_thread(e)
@@ -284,10 +283,14 @@ class APP(QMainWindow, Window, object):
     
     def handle_error_while_downloading(self, error_obj):
         try:
+            # traceback_object = error_obj.__traceback__
+            raise error_obj
             title = error_obj.title
             message = str(error_obj)
             self._show_alert(title, message, self.ICONS.critical)
         except Exception as e:
+            # raise e
+            print(e)
             self._show_alert("Error Occured While Downloading", str(e), self.ICONS.critical)
 
     def handle_download_video_clicked(self):
@@ -338,14 +341,18 @@ class APP(QMainWindow, Window, object):
 
 
 
-    def _download_video_with_playlist_quality_index(self, playlist_quality_index = 0, ):
+    def _download_video_with_playlist_quality_index(self, playlist_quality_index = 0):
         filter_obj = Stream_Filter(self.palylist_yt_object)
+        file_name = self.palylist_yt_object.title
         if self.PLAYLIST_QUALITY_INDEX == 0:
             selected_stream = filter_obj.get_highest_quality_progressive_stream()
+            file_name += " audio+video"
         elif self.PLAYLIST_QUALITY_INDEX == 1:
             selected_stream = filter_obj.get_highest_quality_audio_stream()
+            file_name += " audio"
         elif self.PLAYLIST_QUALITY_INDEX == 2:
             selected_stream = filter_obj.get_highest_quality_video_stream()
+            file_name += " video"
         else:
             raise ValueError("Caller should have handled this")
         
@@ -354,6 +361,7 @@ class APP(QMainWindow, Window, object):
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD = Download_Thread(self.palylist_yt_object,
                                                     selected_stream, 
                                                     self.DOWNLOADING_PLAYLIST_VIDEO_ID,
+                                                    file_name = file_name,
                                                     parent=None
                                                     )
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.progress_updated.connect(self.playlist_video_progress.setValue)
@@ -410,14 +418,20 @@ class APP(QMainWindow, Window, object):
         playlist_id_inpt = self._get_text("playlist_id")
         playlist_id = checkers.check_playlist_id_or_url(playlist_id_inpt)
 
-        self.PLAYLIST_VIDEO_IDS,self.PLAYLIST_NAME = playlist_loader.get_video_ids(playlist_id)
+        try:
+            self.PLAYLIST_VIDEO_IDS,self.PLAYLIST_NAME = playlist_loader.get_video_ids(playlist_id, self.SETTINGS.api_key)
+        except exceptions.API_Error as e:
+            self._show_alert(e.title, e.message, self.ICONS.critical)
+            return
+
+        valid_directory_name_for_playlist = formatters.make_valid_dir_name(self.PLAYLIST_NAME)    
         
-        playlist_dir = os.path.join(self.SETTINGS.playlist_dir, self.PLAYLIST_NAME)
+        playlist_dir = os.path.join(self.SETTINGS.playlist_dir, valid_directory_name_for_playlist)
         os.makedirs(playlist_dir, exist_ok=True)
         os.chdir(playlist_dir)
 
         for index, video_id in enumerate(self.PLAYLIST_VIDEO_IDS):
-            print(video_id)
+            # print(video_id)
             self.DOWNLOADED_PLAYLIST_VIDEO_ID = None
             self.CANCELLED_PLAYLIST_VIDEO_ID = None
             self.DOWNLOADING_PLAYLIST_VIDEO_ID = video_id
@@ -438,9 +452,9 @@ class APP(QMainWindow, Window, object):
                 try:
                     self._show_alert(e.title, e.message, self.ICONS.warning)
                 except KeyError:
-                    print(e, "line 258")
                     self._handle_error_on_different_thread(e)
             except Exception as e:
+                print(e)
                 self._handle_error_on_different_thread(e)
 
             finally:
@@ -470,6 +484,8 @@ class APP(QMainWindow, Window, object):
             self.handle_cancel_playlist_video_clicked()
             self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
         self._set_playlist_tab_to_idle()
+        if index+1==len(self.PLAYLIST_VIDEO_IDS):
+            self._show_alert("Downloaded Playlist","Successfully downloaded the palylist")
 
 
         # self.playlist_video_progress.setValue(0)

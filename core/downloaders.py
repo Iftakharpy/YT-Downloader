@@ -61,7 +61,11 @@ class Download_Thread(QThread):
         Pass args and kwargs to stream.downloade function
         """
         self.DOWNLOADER_THREAD = QThread()
-        self.downloader = Logger_Decorator_For_Download_Func(self.stream.download, self.video_id, parent=None)
+        self.downloader = Logger_Decorator_For_Download_Func(self.stream.download,
+                                                            self.video_id,
+                                                            file_name = self.file_name,
+                                                            file_path = self.file_path,
+                                                            parent=self.parent)
         self.downloader.moveToThread(self.DOWNLOADER_THREAD)
         self.downloader.completed.connect(self.DOWNLOADER_THREAD.exit)
         try:

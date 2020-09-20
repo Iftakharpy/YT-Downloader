@@ -14,17 +14,22 @@ DB = Database()
 class Logger_Decorator_For_Download_Func(QObject):
     completed = pyqtSignal()
     MAX_RECURSIVE_CALLS = 700
-    def __init__(self, download_func, video_id, file_name=None, parent=None):
+    def __init__(self, download_func, video_id, file_name=None, file_path=None, parent=None):
         super().__init__(parent=parent)
         self.f = download_func
         self.video_id = video_id
         self.file_name = file_name
+        self.file_path = file_path
 
     def run(self,*args,**kwargs):
         try:
             if self.file_name:
-                return_value = self.f(filename=self.file_name)
+                return_value = self.f(
+                                      filename = self.file_name,
+                                      output_path = self.file_path
+                                    )
                 self.completed.emit()
+                # print(f"downloaded {self.file_name}")
                 return return_value
             else:
                 return_value = self.f()

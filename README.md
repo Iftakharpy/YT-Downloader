@@ -1,4 +1,4 @@
-# YT Downloader downloads video and playlist from YouTube
+# YT Downloader downloads videos and playlists from YouTube
 >YT Downloader uses the video url/id to download videos
 >To download playlists it requires an api key of Youtube Data API v3
 >It uses the api key to get video ids from playlist to get an api key visit [the link](https://rapidapi.com/blog/how-to-get-youtube-api-key/).

@@ -485,7 +485,8 @@ class APP(QMainWindow, Window, object):
             self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
         self._set_playlist_tab_to_idle()
         if index+1==len(self.PLAYLIST_VIDEO_IDS):
-            self._show_alert("Downloaded Playlist","Successfully downloaded the palylist")
+            self._show_alert("Downloaded Playlist",
+                             f"Successfully downloaded the palylist.\nSaved to: {playlist_dir}")
 
 
         # self.playlist_video_progress.setValue(0)

@@ -79,6 +79,33 @@ class APP(QMainWindow, Window, object):
         
         self._connect_functions_to_buttons()
 
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, "Close Window confirmation",
+                                            "Are you sure you want to close the application?",
+                                            QMessageBox.Yes | QMessageBox.No)
+        
+        
+        #closing all the threads and quitting
+        if reply == 16384:
+            try:
+                self.handle_cancel_clicked()
+            except Exception:
+                pass
+            try:
+                self.handle_cancel_playlist_video_clicked()
+            except Exception:
+                pass
+            try:
+                self.handle_stop_downloading_playlist()
+            except Exception:
+                pass
+            event.accept()
+        #ignoring
+        elif reply == 65536:
+            event.ignore()
+        else:
+            print("don't know what to do")
+
     def _connected_to_internet(self):
         try:
             a=requests.get("https://www.google.com")
@@ -684,33 +711,15 @@ You entered a wrong path to save downloaded playlists.
 #     window = APP()
 #     window.show()
 #     window._check_current_api_key()
-    # sys.exit(app.exec_())
+#     sys.exit(app.exec_())
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = APP(MainWindow)
     ui.show()
-    # ui._check_current_api_key()
     exit_code = app.exec_()
 
-    try:
-        ui.LOADER_THREAD.exit()
-    except Exception:
-        pass
-    try:
-        ui.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
-    except Exception:
-        pass
-    try:
-        ui.VIDEO_DOWNLOAD_THREAD.exit()
-    except Exception:
-        pass
-    try:
-        ui.YT_OBJECT_LOADER_THREAD.exit()
-    except Exception:
-        pass
-    print(exit_code)
     sys.exit(exit_code)
 
 

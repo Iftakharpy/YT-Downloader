@@ -1,9 +1,20 @@
+import logging
+
+logger = logging.getLogger("yt_downloader")
+logging.basicConfig(filename = "yt_downloader.log",
+                    filemode = "w",
+                    format = "[%(asctime)s] - Line No: %(lineno)d - File Path: %(pathname)s \n%(message)s",
+                    level = logging.ERROR
+                    )
+
 # builtin modules
 import os
 import sys
+import http
 from time import sleep
 import requests
 from collections import namedtuple
+import pytube
 from pytube import YouTube
 from pprint import pp
 
@@ -151,6 +162,8 @@ class APP(QMainWindow, Window, object):
         return os.path.exists(folder_path) and os.path.isdir(folder_path)
 
     def _handle_error_on_different_thread(self, error):
+        logger.exception(error)
+        
         try:
             title = error.title
             message = str(error)
@@ -247,7 +260,11 @@ class APP(QMainWindow, Window, object):
             formatted_url = formatters.format_video_id_to_url(video_id)
             QApplication.sendPostedEvents() 
             QApplication.processEvents()
-            self.yt_object = YouTube(formatted_url)#self.load_yt_object(formatted_url)
+            self.yt_object = self.load_playlist_yt_object(formatted_url) #YouTube(formatted_url)#self.load_yt_object(formatted_url)
+            if self.yt_object == formatted_url:
+                self._show_alert("Error", "Can't download this video. YouTube didn't respond in time.")
+                self._set_video_tab_to_idle()
+                return
 
             #loading qualities to qualities combobox
             self._load_qualities_seperate_thread()
@@ -289,7 +306,7 @@ class APP(QMainWindow, Window, object):
             message = str(error_obj)
             self._show_alert(title, message, self.ICONS.critical)
         except Exception as e:
-            # raise e
+            logger.exception(e)
             print(e)
             self._show_alert("Error Occured While Downloading", str(e), self.ICONS.critical)
 
@@ -331,6 +348,41 @@ class APP(QMainWindow, Window, object):
 
 
 #############################################   PLAYLIST TAB   ##############################################
+    def load_playlist_yt_object(self, video_url):
+        yt_obj = None
+        try:
+            yt_obj = YouTube(video_url)
+        except KeyError as e:
+            logger.exception("KeyError in load_playlist_yt_object "+str(e))
+            print("KeyError in load_playlist_yt_object "+str(e))
+            if str(e) == "'streamingData'":
+                return video_url
+            elif str(e):
+                # print("recursing")
+                yt_obj = self.load_playlist_yt_object(video_url)
+                return yt_obj
+            else:
+                raise e
+        except http.client.RemoteDisconnected as e:
+            logger.exception("http.client.RemoteDisconnected in load_playlist_yt_object "+str(e))
+            print("http.client.RemoteDisconnected in load_playlist_yt_object "+str(e))
+            yt_obj = self.load_playlist_yt_object(video_url)
+            return yt_obj
+        # except 
+        except RecursionError:
+            raise exceptions.Connection_Lost
+        except pytube.exceptions.RegexMatchError as e:
+            logger.exception(e)
+            print(e,"recursing")
+            yt_obj = self.load_playlist_yt_object(video_url)
+            return yt_obj
+            raise e
+        except Exception as e:
+            print(e)
+            raise e
+        return yt_obj
+
+
     def _connect_functions_to_plalist_tab(self):
         # connecting function to download_playlist button
         self.download_playlist.clicked.connect(self.handle_download_playlist_clicked)
@@ -347,8 +399,8 @@ class APP(QMainWindow, Window, object):
 
 
     def _download_video_with_playlist_quality_index(self, playlist_quality_index = 0):
-        filter_obj = Stream_Filter(self.palylist_yt_object)
-        file_name = self.palylist_yt_object.title
+        filter_obj = Stream_Filter(self.playlist_yt_object)
+        file_name = self.playlist_yt_object.title
         if self.PLAYLIST_QUALITY_INDEX == 0:
             selected_stream = filter_obj.get_highest_quality_progressive_stream()
             file_name += " audio+video"
@@ -361,9 +413,9 @@ class APP(QMainWindow, Window, object):
         else:
             raise ValueError("Caller should have handled this")
         
-        self.currently_downloading_playlist_video.setText(self.palylist_yt_object.title)
+        self.currently_downloading_playlist_video.setText(self.playlist_yt_object.title)
 
-        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD = Download_Thread(self.palylist_yt_object,
+        self.PLAYLIST_VIDEO_DOWNLOAD_THREAD = Download_Thread(self.playlist_yt_object,
                                                     selected_stream, 
                                                     self.DOWNLOADING_PLAYLIST_VIDEO_ID,
                                                     file_name = file_name,
@@ -379,7 +431,7 @@ class APP(QMainWindow, Window, object):
         self.download_playlist.setDisabled(True)
         # QApplication.processEvents()
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.start()
-        self.currently_downloading.setText(f"Downloading {self.palylist_yt_object.title}")
+        self.currently_downloading.setText(f"Downloading {self.playlist_yt_object.title}")
 
 
 
@@ -401,13 +453,13 @@ class APP(QMainWindow, Window, object):
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.pause_download()
     
     def handle_signal_of_playlist_video_cancellation(self):
-        self._set_playlist_tab_to_idle()
+        # self._set_playlist_tab_to_idle()
         self.CANCELLED_PLAYLIST_VIDEO_ID = self.DOWNLOADING_PLAYLIST_VIDEO_ID
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
 
     def handle_playlist_video_downloaded(self, file_path):
         self._set_statusbar_text(file_path)
-        self._set_playlist_tab_to_idle()
+        # self._set_playlist_tab_to_idle()
         self.DOWNLOADED_PLAYLIST_VIDEO_ID = self.DOWNLOADING_PLAYLIST_VIDEO_ID
         self.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
 
@@ -458,22 +510,25 @@ class APP(QMainWindow, Window, object):
             self.stop_downloading_playlist.setEnabled(True)
             
             try:
-                #creating self.palylist_yt_object
+                #creating self.playlist_yt_object
                 formatted_url = formatters.format_video_id_to_url(video_id)
-                QApplication.sendPostedEvents() 
-                QApplication.processEvents()
-                self.palylist_yt_object = YouTube(formatted_url)#self.load_yt_object(formatted_url)
+                # QApplication.sendPostedEvents() 
+                # QApplication.processEvents()
+                self.playlist_yt_object = self.load_playlist_yt_object(formatted_url)
+                # print(self.playlist_yt_object,formatted_url)
+                # self.playlist_yt_object = YouTube(formatted_url) #self.load_yt_object(formatted_url)
             except exceptions.Invalid_Video_Id as e:
                 try:
                     self._show_alert(e.title, e.message, self.ICONS.warning)
                 except KeyError:
                     self._handle_error_on_different_thread(e)
             except Exception as e:
-                print(e)
                 self._handle_error_on_different_thread(e)
 
             finally:
-                self._set_statusbar_text(f"Loaded {self.palylist_yt_object.title}")
+                if self.playlist_yt_object == formatted_url:
+                    continue
+                self._set_statusbar_text(f"Loaded {self.playlist_yt_object.title}")
 
             if self.PLAYLIST_QUALITY_INDEX <= 2:
                 self._download_video_with_playlist_quality_index(self.PLAYLIST_QUALITY_INDEX)
@@ -487,7 +542,6 @@ class APP(QMainWindow, Window, object):
                 QApplication.sendPostedEvents() 
                 QApplication.processEvents()
                 sleep(self.SLEEP_TIME)
-                # print("stuck")
                 if self.SKIP_DOWNLOADING_PLALIST==True:
                     self.DOWNLOADED_PLAYLIST_VIDEO_ID=video_id
                     break
@@ -641,30 +695,22 @@ def main():
     exit_code = app.exec_()
 
     try:
-        app.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
+        ui.LOADER_THREAD.exit()
     except Exception:
         pass
-    
     try:
-        app.LOADER_THREAD.exit()
+        ui.PLAYLIST_VIDEO_DOWNLOAD_THREAD.exit()
     except Exception:
         pass
-    
     try:
-        app.YT_OBJECT_LOADER_THREAD.exit()
+        ui.VIDEO_DOWNLOAD_THREAD.exit()
     except Exception:
         pass
-    
     try:
-        app.VIDEO_DOWNLOAD_THREAD.exit()
+        ui.YT_OBJECT_LOADER_THREAD.exit()
     except Exception:
         pass
-    
-    try:
-        app.YT_OBJECT_LOADER_THREAD.exit()
-    except Exception:
-        pass
-
+    print(exit_code)
     sys.exit(exit_code)
 
 
